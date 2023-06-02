@@ -2,6 +2,7 @@
 
 size_t	get_end_of_line(char *buffer)
 {
+	
 	size_t	i;
 
 	i = 0;
