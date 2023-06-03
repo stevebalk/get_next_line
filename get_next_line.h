@@ -1,16 +1,37 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line.h                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sbalk <sbalk@student.42.fr>                +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/06/03 15:56:23 by sbalk             #+#    #+#             */
+/*   Updated: 2023/06/03 16:32:07 by sbalk            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef GET_NEXT_LINE_H
 # define GET_NEXT_LINE_H
+
+#include <unistd.h>
+
 
 typedef struct s_node
 {
 	char	*str;
-	void	*next;
+	size_t	len;
+	struct s_node	*next;
 } t_node;
 
+typedef struct s_flags
+{
+	size_t	line_end;
+	size_t	new_line_start;
+	int		is_new_line;
+} t_flags;
 
 #define BUFFER_SIZE 1024
 
-#include <unistd.h>
 
 char	*get_next_line(int fd);
 
