@@ -6,7 +6,7 @@
 /*   By: sbalk <sbalk@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/03 15:56:23 by sbalk             #+#    #+#             */
-/*   Updated: 2023/06/03 16:32:07 by sbalk            ###   ########.fr       */
+/*   Updated: 2023/06/05 18:00:55 by sbalk            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 # define GET_NEXT_LINE_H
 
 #include <unistd.h>
-
 
 typedef struct s_node
 {
@@ -28,9 +27,10 @@ typedef struct s_flags
 	size_t	line_end;
 	size_t	new_line_start;
 	int		is_new_line;
+	ssize_t	b_read;
 } t_flags;
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 5
 
 
 char	*get_next_line(int fd);
