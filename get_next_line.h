@@ -6,7 +6,7 @@
 /*   By: sbalk <sbalk@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/03 15:56:23 by sbalk             #+#    #+#             */
-/*   Updated: 2023/06/07 10:57:49 by sbalk            ###   ########.fr       */
+/*   Updated: 2023/06/07 16:48:51 by sbalk            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,10 +29,12 @@ typedef struct s_flags
 	size_t	line_end;
 	int		is_new_line;
 	ssize_t	b_read;
+	int		file_end;
 } t_flags;
 
-#define BUFFER_SIZE 5
-
+#ifndef BUFFER_SIZE
+# define BUFFER_SIZE 1
+# endif
 
 char	*get_next_line(int fd);
 

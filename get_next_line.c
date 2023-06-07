@@ -6,7 +6,7 @@
 /*   By: sbalk <sbalk@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/03 15:56:13 by sbalk             #+#    #+#             */
-/*   Updated: 2023/06/07 11:11:13 by sbalk            ###   ########.fr       */
+/*   Updated: 2023/06/07 17:30:51 by sbalk            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,29 +20,35 @@ void	debug_print_list(t_node **stash, int fd)
 
 	i = 0;
 	t_node *node = stash[fd];
-	printf("\n\n///// PRINT LIST //////\n");
+	printf("\n------PRINT LIST----------\n");
 	while (node != NULL)
 	{
 		printf("Node %li: %s\n", i, node->str);
 		node = node->next;
 		i++;
 	}
-	printf("///////////////////////////\n");
+	printf("----------------------------\n");
 }
-
-static void	is_end_of_line(char *buffer, size_t start, size_t len, t_flags *f)
+// static void	is_end_of_line(char *buffer, size_t start, size_t len, t_flags *f)
+static void	is_end_of_line(t_node *node, t_flags *f)
 {
 	f->is_new_line = 0;
-	f->line_end = start;
-	while(f->line_end < len)
+	f->line_end = node->start;
+	while(f->line_end < node->str_len)
 	{
 		f->line_end++;
-		if (buffer[f->line_end] == '\n')
+		node->tlen++;
+		if (node->str[f->line_end - 1] == '\n')
 		{
 			f->is_new_line = 1;
 			break ;
 		}
 	}
+
+	// if (f->line_end < f->b_read)
+	// 	new_node->start = f->line_end;
+
+	// new_node->tlen += stash[fd]->tlen; // not NULL
 }
 
 static t_node	*free_node(t_node *node)
@@ -50,7 +56,8 @@ static t_node	*free_node(t_node *node)
 	t_node *next_node;
 
 	next_node = node->next;
-	free(node->str);
+	if (node->str != NULL)
+		free(node->str);
 	free(node);
 	return (next_node);
 }
@@ -72,22 +79,22 @@ static t_node	*add_buffer_to_list(t_node **stash, int fd, char *buffer, t_flags 
 	new_node = malloc(sizeof(t_node));
 	if (new_node == NULL)
 	{
-		printf("ERROR, List freeed\n");
+		printf("ERROR, List freeed\n"); // DEBUG
+		free(buffer);
 		free_list(stash, fd);
 		return (NULL);
 	}
 	new_node->str = buffer;
+	new_node->start = 0;
+	new_node->str_len = f->b_read;
 	new_node->next = NULL;
-	new_node->tlen = f->line_end;
-	if (f->line_end < f->b_read)
-		new_node->start = f->line_end;
 	if (stash[fd] != NULL)
 	{
-		// printf("NOT NULL!!!!! with: %s\n", new_node->str);
-		new_node->tlen += stash[fd]->tlen;
+		new_node->tlen = stash[fd]->tlen;
 		new_node->next = stash[fd];
-		// printf("NEXT NODE STRING: %s\n", new_node->next->str);
 	}
+	else
+		new_node->tlen = 0;
 	stash[fd] = new_node;
 	// printf("BUFFER: %s\n", stash[fd]->str);
 	// printf("LENGTH: %lu\n", stash[fd]->tlen);
@@ -115,40 +122,39 @@ static void	append_to_string(t_node *node, char *str)
 static char	*create_return_str(t_node **stash, int fd, t_flags *f)
 {
 	char	*ret;
-	t_node	*new_head_node;
-	t_node	*node;
-	size_t	new_node_len;
+	size_t	old_start;
 
-	size_t i = 0;
-
-	new_node_len = f->b_read - f->line_end;
-	node = stash[fd];
-	new_head_node = node;
+	// size_t i = 0;
+	// if (stash[fd] == NULL) // Maybe useless
+	// 	return (NULL);
+	old_start = stash[fd]->start;
+	stash[fd]->start = f->line_end;
+	// printf("TOTAL_LENGTH: %lu\n", stash[fd]->tlen);
 	ret = malloc(stash[fd]->tlen + 1);
 	if (ret == NULL)
 		return (NULL);
-	// printf("Length: %lu\n", stash[fd]->tlen);
-	while (i < node->tlen - f->line_end) /// DEBUG ////
-	{
-		ret[i++] = 'A';
-	}
 	ret[stash[fd]->tlen] = '\0';
-	while (f->line_end)
+	while (f->line_end > old_start)
 	{
-		// printf("Length: %lu\n", stash[fd]->tlen);
-		ret[stash[fd]->tlen - 1] = node->str[f->line_end - 1];
+		ret[stash[fd]->tlen - 1] = stash[fd]->str[f->line_end - 1];
 		stash[fd]->tlen -= 1;
 		f->line_end -= 1;
 	}
 	// printf("PEW %s\n", node->str);
-	append_to_string(node, ret);
-	if (new_node_len)
+	append_to_string(stash[fd], ret);
+	if (stash[fd]->start <= stash[fd]->str_len)
 	{
-		new_head_node->tlen = new_node_len;
-		new_head_node->next = NULL;
+		stash[fd]->tlen = 0;
+		stash[fd]->next = NULL;
+		// printf("START : %lu\n", stash[fd]->start);
+		// printf("LENGTH: %lu\n", stash[fd]->str_len);
 	}
 	else
-		free_node(new_head_node);
+	{
+		f->file_end = 1;
+		free(stash[fd]);
+		stash[fd] = NULL;
+	}
 	return (ret);
 }
 
@@ -163,8 +169,7 @@ char	*get_next_line(int fd)
 	flags.is_new_line = 0;
 	if (stash[fd] != NULL)
 	{
-		is_end_of_line(stash[fd]->str, stash[fd]->start,
-			stash[fd]->str_len, &flags);
+		is_end_of_line(stash[fd], &flags);
 	}
 	while(!flags.is_new_line)
 	{
@@ -172,15 +177,25 @@ char	*get_next_line(int fd)
 		if (!buffer)
 			return (NULL);
 		flags.b_read = read(fd, buffer, BUFFER_SIZE);
-		if (flags.b_read <= 0)
+		if (flags.b_read <= 0 && stash[fd])
+		{
+			free(buffer);
+			// printf("POINTER: %p", stash[fd]);
+			// printf("B_READ = %li\n", flags.b_read);
+			// stash[fd] = NULL;
+			if (flags.b_read == 0 && flags.file_end)
+				return (create_return_str(stash, fd, &flags));
 			return (NULL);
-		is_end_of_line(buffer, &flags);
+		}
+		// buffer[flags.b_read + 1] = '\0';
+		// printf("BUFFER: %s\n", buffer);
 		node = add_buffer_to_list(stash, fd, buffer, &flags);
 		if (!node)
 			return (NULL);
+		is_end_of_line(stash[fd], &flags);
 	}
 	// debug_print_list(stash, fd); //// DEBUG /////
-	if (stash[fd] != NULL)
+	if (stash[fd] != NULL) // possible pointless //CHECK LATER
 		return (create_return_str(stash, fd, &flags));
 	return (NULL);
 }
