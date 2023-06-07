@@ -6,7 +6,7 @@
 /*   By: sbalk <sbalk@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/03 15:56:23 by sbalk             #+#    #+#             */
-/*   Updated: 2023/06/05 18:00:55 by sbalk            ###   ########.fr       */
+/*   Updated: 2023/06/07 10:57:49 by sbalk            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,14 +18,15 @@
 typedef struct s_node
 {
 	char	*str;
-	size_t	len;
+	size_t	str_len;
+	size_t	start;
+	size_t	tlen;
 	struct s_node	*next;
 } t_node;
 
 typedef struct s_flags
 {
 	size_t	line_end;
-	size_t	new_line_start;
 	int		is_new_line;
 	ssize_t	b_read;
 } t_flags;
